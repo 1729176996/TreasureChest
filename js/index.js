@@ -19,7 +19,9 @@ $(function() {
 				
 			},
 			check() {
-				checkVersion('TreasureChest');
+				init(function(){
+					checkVersion('TreasureChest');
+				});
 			},
 		},
 	})

@@ -186,3 +186,63 @@ function getFileInfo(path){
   }
   return info;
 }
+
+function checkVersion(xmName){
+	plus.runtime.getProperty(plus.runtime.appid, function (inf) {
+	  // 当前版本
+	  var wgtVersion = inf.version;
+	  var url = 'https://1729176996.github.io/VersionManager/version.json';
+	  axios.get(url).then(res => {
+	  	console.log(res)
+	  	console.log(res.data)
+	  	var list = res.data && res.data.list && res.data.list.length > 0 ? res.data.list : [];
+	  	if(list.length>0){
+	  		list.forEach(v => {
+	  		  if(v.name===xmName&&v.version>wgtVersion){
+	  		    downloadWgt(v.wgtUrl);
+	  		  }
+	  		});
+	  	}
+	  }).catch(err => {
+	  	console.log(err);
+	  })
+	});
+}
+function downloadWgt(wgtUrl){
+	// 更新文件 wgt 文件地址
+	plus.nativeUI.showWaiting("正在更新...");
+	plus.downloader.createDownload(wgtUrl,
+		{
+			filename: "_doc/update/",
+		},
+		function (d, status) {
+	      if (status == 200) {
+	        console.log("下载wgt成功：" + d.filename);
+	        installWgt(d.filename); // 安装wgt方法
+	      } else {
+	        console.log("下载wgt失败！");
+	        plus.nativeUI.alert("下载wgt失败！");
+	      }
+	      plus.nativeUI.closeWaiting();
+	    }
+	  ).start();
+}
+function installWgt(path){
+	plus.nativeUI.showWaiting("安装wgt文件...");
+	plus.runtime.install(
+	  path,
+	  {},
+	  function () {
+	    plus.nativeUI.closeWaiting();
+	    console.log("安装wgt文件成功！");
+	    plus.nativeUI.alert("应用资源更新完成！", function () {
+	      plus.runtime.restart();
+	    });
+	  },
+	  function (e) {
+	    plus.nativeUI.closeWaiting();
+	    console.log("安装wgt文件失败[" + e.code + "]：" + e.message);
+	    plus.nativeUI.alert("安装wgt文件失败[" + e.code + "]：" + e.message);
+	  }
+	);
+}
